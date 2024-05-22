@@ -3,7 +3,8 @@ import { chunkGeometryData, terrainTextureSheet } from "./chunkLogic";
 import { BufferAttribute, BufferGeometry, DoubleSide, Mesh } from "three";
 import { useChunk } from "./worldStore";
 import { RigidBody, TrimeshCollider } from "@react-three/rapier";
-import { CELL_SIZE, terrainBodies } from "../util/worldUtils";
+import { terrainBodies } from "../util/worldUtils";
+import { CELL_SIZE } from "../../../server/src/common/world";
 
 export function Chunk({ x, y, z }: { x: number; y: number; z: number }) {
   const chunk = useChunk(x, y, z);
@@ -55,7 +56,7 @@ export function Chunk({ x, y, z }: { x: number; y: number; z: number }) {
         Uint32Array
       ],
     };
-  }, [chunk]);
+  }, [chunk, x, y, z, chunk?.blocks]);
 
   if (!geoData) {
     return null;

@@ -4,12 +4,12 @@ import {
   RapierCollider,
   RapierRigidBody,
   RigidBody,
+  useAfterPhysicsStep,
   useBeforePhysicsStep,
   useRapier,
 } from "@react-three/rapier";
 import { useEffect, useMemo, useRef } from "react";
 import {
-  Mesh,
   Raycaster,
   Vector3,
   type Group,
@@ -21,6 +21,9 @@ import { useThree } from "@react-three/fiber";
 import { useWorld } from "../world/worldStore";
 import { calculateClickPosition } from "./clickLogic";
 import { terrainBodies } from "../util/worldUtils";
+import { useColyseusRoom } from "../networking/colyseus";
+import { ClientPackageType } from "../../../server/src/common/packets";
+import { useLocalPlayer } from "./playerStore";
 
 export function Player() {
   const r = useRapier();
@@ -41,6 +44,24 @@ export function Player() {
   const walkVector = useWalkVector();
 
   const jumping = useKeyboardControls<Controls>((state) => state.jump);
+
+  const room = useColyseusRoom();
+
+  const setLocalPlayerPos = useLocalPlayer((state) => state.setPos);
+
+  useAfterPhysicsStep(() => {
+    if (!room) return;
+    room.send(ClientPackageType.PlayerMoves, {
+      x: rbRef.current.translation().x,
+      y: rbRef.current.translation().y,
+      z: rbRef.current.translation().z,
+    });
+    setLocalPlayerPos(
+      rbRef.current.translation().x,
+      rbRef.current.translation().y,
+      rbRef.current.translation().z
+    );
+  });
 
   useBeforePhysicsStep(() => {
     const grounded = characterController.computedGrounded();
@@ -103,9 +124,19 @@ export function Player() {
         }
         const voxel = calculateClickPosition(i.point, i.face!.normal);
         if (!e.shiftKey) {
-          setBlock(voxel.voxel.x, voxel.voxel.y, voxel.voxel.z, 0);
+          room?.send(ClientPackageType.UpdateBlock, {
+            x: voxel.voxel.x,
+            y: voxel.voxel.y,
+            z: voxel.voxel.z,
+            type: 0,
+          });
         } else {
-          setBlock(voxel.faceVoxel.x, voxel.faceVoxel.y, voxel.faceVoxel.z, 1);
+          room?.send(ClientPackageType.UpdateBlock, {
+            x: voxel.faceVoxel.x,
+            y: voxel.faceVoxel.y,
+            z: voxel.faceVoxel.z,
+            type: 1,
+          });
         }
         break;
       }
@@ -119,7 +150,7 @@ export function Player() {
       <RigidBody
         type="kinematicPosition"
         ref={rbRef}
-        position={[0, 80, 0]}
+        position={[10, 20, 10]}
         colliders={false}
       >
         <PointerLock />
@@ -127,10 +158,6 @@ export function Player() {
           <PerspectiveCamera makeDefault ref={camRef} fov={120} />
         </group>
         <CuboidCollider args={[0.3, 0.9, 0.3]} ref={colRef} />
-        <mesh>
-          <boxGeometry args={[0.6, 1.8, 0.6]} />
-          <meshBasicMaterial color="red" />
-        </mesh>
       </RigidBody>
     </>
   );

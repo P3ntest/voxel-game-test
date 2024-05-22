@@ -1,12 +1,31 @@
 import { Canvas } from "@react-three/fiber";
 import { KeyboardControls } from "@react-three/drei";
 import { World } from "./world/World";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { Physics } from "@react-three/rapier";
 import { Player } from "./player/Player";
 import { keyboardControlsMap } from "./player/Controls";
+import {
+  connectToColyseus,
+  disconnectFromColyseus,
+} from "./networking/colyseus";
+import { OtherPlayers } from "./player/OtherPlayers";
+import { Broadcaster } from "./networking/Broadcaster";
+import { ChunkLoader } from "./player/ChunkLoader";
 
 export default function App() {
+  useEffect(() => {
+    (async () => {
+      console.log("connecting to colyseus");
+      await connectToColyseus("voxelRoom");
+      console.log("connected to colyseus");
+    })();
+
+    return () => {
+      disconnectFromColyseus();
+    };
+  }, []);
+
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
       <div
@@ -36,6 +55,7 @@ export default function App() {
         />
       </div>
       <Canvas>
+        <Broadcaster />
         <KeyboardControls map={keyboardControlsMap}>
           <Suspense>
             <Physics timeStep={1 / 20}>
@@ -43,6 +63,8 @@ export default function App() {
               <directionalLight position={[0, 10, 0]} intensity={1} />
               <World />
               <Player />
+              <ChunkLoader />
+              <OtherPlayers />
             </Physics>
           </Suspense>
         </KeyboardControls>

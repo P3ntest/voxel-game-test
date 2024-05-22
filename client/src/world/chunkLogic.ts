@@ -1,5 +1,5 @@
 import { NearestFilter, SRGBColorSpace, TextureLoader } from "three";
-import { CELL_SIZE, getVoxelOffset } from "../util/worldUtils";
+import { CELL_SIZE, getVoxelOffset } from "../../../server/src/common/world";
 
 const TILE_SIZE = 16;
 const TILE_TEXTURE_WIDTH = 256;

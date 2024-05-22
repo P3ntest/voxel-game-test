@@ -1,6 +1,7 @@
 import { createNoise2D } from "simplex-noise";
+
 import alea from "alea";
-import { CELL_SIZE } from "../../../server/src/common/world";
+import { CELL_SIZE } from "./world";
 
 export const SEA_LEVEL = 0; // the 5th layer in the middl
 const TERRAIN_HEIGHT = CELL_SIZE;
@@ -8,7 +9,7 @@ const TERRAIN_HEIGHT = CELL_SIZE;
 const prng = alea("seed");
 const noise2d = createNoise2D(prng);
 
-export function generateDummyChunk(x: number, y: number, z: number) {
+export function generateChunkData(x: number, y: number, z: number) {
   const chunk = new Uint8Array(CELL_SIZE * CELL_SIZE * CELL_SIZE);
 
   // if the chunk is above terrain height, we dont need to generate anything

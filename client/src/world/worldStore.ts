@@ -1,10 +1,8 @@
 import { create } from "zustand";
-import { generateDummyChunk } from "./dummyChunk";
 import {
-  WORLD_HEIGHT_CELLS,
   getVoxelOffset,
   translateGlobalToChunkCoords,
-} from "../util/worldUtils";
+} from "../../../server/src/common/world";
 
 type Chunk = {
   x: number;
@@ -61,26 +59,6 @@ export const useWorld = create<WorldStore>((set) => ({
       };
     }),
 }));
-
-export function generateWorld() {
-  const WORLD_SIZE = 10;
-
-  const min = Math.ceil(-WORLD_SIZE / 2);
-  const max = Math.ceil(WORLD_SIZE / 2);
-
-  const heightMin = Math.ceil(-WORLD_HEIGHT_CELLS / 2);
-  const heightMax = Math.ceil(WORLD_HEIGHT_CELLS / 2);
-
-  for (let x = min; x < max; ++x) {
-    for (let y = heightMin; y < heightMax; ++y) {
-      for (let z = min; z < max; ++z) {
-        useWorld.getState().setChunk(x, y, z, generateDummyChunk(x, y, z));
-      }
-    }
-  }
-}
-
-generateWorld();
 
 export function useChunk(x: number, y: number, z: number) {
   return useWorld((state) =>
