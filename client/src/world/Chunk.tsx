@@ -1,19 +1,32 @@
-import { useMemo, useState } from "react";
-import { CELL_SIZE, chunkGeometryData } from "./chunkLogic";
-import { BufferAttribute, BufferGeometry } from "three";
+import { useEffect, useMemo, useRef } from "react";
+import { chunkGeometryData, terrainTextureSheet } from "./chunkLogic";
+import { BufferAttribute, BufferGeometry, DoubleSide, Mesh } from "three";
 import { useChunk } from "./worldStore";
-import { RigidBody } from "@react-three/rapier";
+import { RigidBody, TrimeshCollider } from "@react-three/rapier";
+import { CELL_SIZE, terrainBodies } from "../util/worldUtils";
 
 export function Chunk({ x, y, z }: { x: number; y: number; z: number }) {
   const chunk = useChunk(x, y, z);
 
-  const color = useState(Math.random() * 0xffffff)[0];
+  const meshRef = useRef<Mesh>(null!);
+
+  useEffect(() => {
+    const body = meshRef.current;
+    if (meshRef.current) {
+      terrainBodies.add(body);
+    }
+    return () => {
+      terrainBodies.delete(body);
+    };
+  }, [meshRef.current]);
 
   const geoData = useMemo(() => {
     if (!chunk) {
       return null;
     }
-    const { vertices, normals, indices } = chunkGeometryData(chunk?.blocks);
+    const { vertices, normals, indices, uvs } = chunkGeometryData(
+      chunk?.blocks
+    );
 
     if (vertices.length === 0) {
       return null;
@@ -31,8 +44,17 @@ export function Chunk({ x, y, z }: { x: number; y: number; z: number }) {
       "normal",
       new BufferAttribute(new Float32Array(normals), normalNumComponents)
     );
+    geometry.setAttribute("uv", new BufferAttribute(new Float32Array(uvs), 2));
     geometry.setIndex(indices);
-    return { geometry, indices, vertices };
+    return {
+      geometry,
+      indices,
+      vertices,
+      trimeshArgs: [new Float32Array(vertices), new Uint32Array(indices)] as [
+        Float32Array,
+        Uint32Array
+      ],
+    };
   }, [chunk]);
 
   if (!geoData) {
@@ -42,12 +64,18 @@ export function Chunk({ x, y, z }: { x: number; y: number; z: number }) {
   const { geometry } = geoData;
 
   return (
-    <RigidBody type="fixed" colliders="trimesh">
+    <RigidBody type="fixed" colliders={false}>
       <mesh
+        ref={meshRef}
         geometry={geometry}
         position={[x * CELL_SIZE, y * CELL_SIZE, z * CELL_SIZE]}
       >
-        <meshLambertMaterial attach="material" color={color} />
+        <TrimeshCollider args={geoData.trimeshArgs} />
+        <meshLambertMaterial
+          attach="material"
+          map={terrainTextureSheet}
+          side={DoubleSide}
+        />
       </mesh>
     </RigidBody>
   );
