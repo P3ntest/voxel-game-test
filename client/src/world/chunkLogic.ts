@@ -1,12 +1,15 @@
 import { NearestFilter, SRGBColorSpace, TextureLoader } from "three";
 import { CELL_SIZE, getVoxelOffset } from "../../../server/src/common/world";
 
-const TILE_SIZE = 16;
-const TILE_TEXTURE_WIDTH = 256;
-const TILE_TEXTURE_HEIGHT = 64;
+import terrainAtlas from "../assets/terrainAtlas.json";
+import { blockByIdMap } from "./blockInfo";
+
+const TILE_SIZE = terrainAtlas.textureSize;
+const TILE_TEXTURE_WIDTH = terrainAtlas.width;
+const TILE_TEXTURE_HEIGHT = terrainAtlas.height;
 
 const loader = new TextureLoader();
-export const terrainTextureSheet = loader.load("spritesheet.png");
+export const terrainTextureSheet = loader.load("terrainAtlas.png");
 terrainTextureSheet.magFilter = NearestFilter;
 terrainTextureSheet.minFilter = NearestFilter;
 terrainTextureSheet.colorSpace = SRGBColorSpace;
@@ -22,8 +25,12 @@ export function chunkGeometryData(chunkData: Uint8Array) {
       for (let x = 0; x < CELL_SIZE; ++x) {
         const voxel = chunkData[getVoxelOffset(x, y, z)];
         if (voxel) {
-          const uvVoxel = voxel - 1;
-          for (const { dir, corners, uvRow } of VoxelFaces) {
+          const blockInfo = blockByIdMap[voxel] ?? blockByIdMap[1];
+          for (const { dir, corners, uvIndex } of VoxelFaces) {
+            const uvTile = blockInfo.textureAtlas[uvIndex];
+            const uvVoxel = uvTile.x;
+            const uvRow = uvTile.y;
+
             const neighborPosition = getVoxelOffset(
               x + dir[0],
               y + dir[1],
@@ -53,7 +60,7 @@ export function chunkGeometryData(chunkData: Uint8Array) {
 const VoxelFaces = [
   {
     // left
-    uvRow: 0,
+    uvIndex: 2,
     dir: [-1, 0, 0],
     corners: [
       { pos: [0, 1, 0], uv: [0, 1] },
@@ -64,7 +71,7 @@ const VoxelFaces = [
   },
   {
     // right
-    uvRow: 0,
+    uvIndex: 4,
     dir: [1, 0, 0],
     corners: [
       { pos: [1, 1, 1], uv: [0, 1] },
@@ -75,7 +82,7 @@ const VoxelFaces = [
   },
   {
     // bottom
-    uvRow: 1,
+    uvIndex: 1,
     dir: [0, -1, 0],
     corners: [
       { pos: [1, 0, 1], uv: [1, 0] },
@@ -86,7 +93,7 @@ const VoxelFaces = [
   },
   {
     // top
-    uvRow: 2,
+    uvIndex: 0,
     dir: [0, 1, 0],
     corners: [
       { pos: [0, 1, 1], uv: [1, 1] },
@@ -97,7 +104,7 @@ const VoxelFaces = [
   },
   {
     // back
-    uvRow: 0,
+    uvIndex: 3,
     dir: [0, 0, -1],
     corners: [
       { pos: [1, 0, 0], uv: [0, 0] },
@@ -108,7 +115,7 @@ const VoxelFaces = [
   },
   {
     // front
-    uvRow: 0,
+    uvIndex: 5,
     dir: [0, 0, 1],
     corners: [
       { pos: [0, 0, 1], uv: [0, 0] },

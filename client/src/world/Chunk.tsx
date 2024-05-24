@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { chunkGeometryData, terrainTextureSheet } from "./chunkLogic";
 import { BufferAttribute, BufferGeometry, DoubleSide, Mesh } from "three";
 import { useChunk } from "./worldStore";
-import { RigidBody, TrimeshCollider } from "@react-three/rapier";
+import { RigidBody, TrimeshCollider, useRapier } from "@react-three/rapier";
 import { terrainBodies } from "../util/worldUtils";
 import { CELL_SIZE } from "../../../server/src/common/world";
+import type { Collider } from "@dimforge/rapier3d-compat";
 
 export function Chunk({ x, y, z }: { x: number; y: number; z: number }) {
   const chunk = useChunk(x, y, z);
@@ -21,8 +22,12 @@ export function Chunk({ x, y, z }: { x: number; y: number; z: number }) {
     };
   }, [meshRef.current]);
 
+  const chunkAvailable = !!chunk;
+
+  // const r = useRapier();
+
   const geoData = useMemo(() => {
-    if (!chunk) {
+    if (!chunkAvailable) {
       return null;
     }
     const { vertices, normals, indices, uvs } = chunkGeometryData(
@@ -47,6 +52,7 @@ export function Chunk({ x, y, z }: { x: number; y: number; z: number }) {
     );
     geometry.setAttribute("uv", new BufferAttribute(new Float32Array(uvs), 2));
     geometry.setIndex(indices);
+
     return {
       geometry,
       indices,
@@ -56,7 +62,32 @@ export function Chunk({ x, y, z }: { x: number; y: number; z: number }) {
         Uint32Array
       ],
     };
-  }, [chunk, x, y, z, chunk?.blocks]);
+  }, [chunkAvailable, chunk?.blocks]);
+
+  // const trimeshArgs = geoData?.trimeshArgs;
+  // const colRef = useRef(null as Collider | null);
+
+  // const unmountCurrentCollider = useCallback(() => {
+  //   if (colRef.current) {
+  //     r.world.removeCollider(colRef.current, true);
+  //   }
+  // }, [r.world]);
+
+  // useEffect(() => {
+  //   // physics
+
+  //   if (!trimeshArgs) {
+  //     return;
+  //   }
+
+  //   console.log("remounting collider");
+  //   const colDesc = r.rapier.ColliderDesc.trimesh(...trimeshArgs);
+  //   colDesc.setTranslation(x * CELL_SIZE, y * CELL_SIZE, z * CELL_SIZE);
+  //   const handle = r.world.createCollider(colDesc);
+
+  //   unmountCurrentCollider();
+  //   colRef.current = handle;
+  // }, [trimeshArgs, unmountCurrentCollider, r]);
 
   if (!geoData) {
     return null;

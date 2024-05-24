@@ -13,7 +13,7 @@ export function ChunkLoader() {
   const chunks = useWorld((state) => state.chunks);
   const setChunk = useWorld((state) => state.setChunk);
 
-  const viewDistance = 3;
+  const viewDistance = 1;
 
   const room = useColyseusRoom();
 

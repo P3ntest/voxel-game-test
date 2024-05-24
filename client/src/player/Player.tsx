@@ -135,7 +135,7 @@ export function Player() {
             x: voxel.faceVoxel.x,
             y: voxel.faceVoxel.y,
             z: voxel.faceVoxel.z,
-            type: 1,
+            type: 4,
           });
         }
         break;
