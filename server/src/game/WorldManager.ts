@@ -108,7 +108,6 @@ export class WorldManager {
       if (this.getBlock(x, y, z) != 0) {
         return [x, y + 1, z];
       }
-      console.log(this.getBlock(x, y, z));
     }
     return [x, MAX_HEIGHT, z];
   }

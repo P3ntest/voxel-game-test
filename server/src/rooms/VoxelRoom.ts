@@ -2,6 +2,7 @@ import { Room, Client } from "@colyseus/core";
 import { PlayerState, VoxelRoomState } from "./schema/VoxelRoomState";
 import { ClientPackageType, ServerPackageType } from "../common/packets";
 import { WorldManager } from "../game/WorldManager";
+import { compressChunk } from "../common/compression";
 
 export class VoxelRoom extends Room<VoxelRoomState> {
   maxClients = 4;
@@ -26,7 +27,7 @@ export class VoxelRoom extends Room<VoxelRoomState> {
         x,
         y,
         z,
-        chunk: chunk.voxels,
+        chunk: compressChunk(chunk.voxels),
       });
     });
 
@@ -49,7 +50,7 @@ export class VoxelRoom extends Room<VoxelRoomState> {
       client.send(ServerPackageType.TeleportPlayer, {
         playerId: client.sessionId,
         x: spawnPoint[0] + 0.5,
-        y: spawnPoint[1] + 1.5,
+        y: spawnPoint[1] + 3.5,
         z: spawnPoint[2] + 0.5,
       });
     });

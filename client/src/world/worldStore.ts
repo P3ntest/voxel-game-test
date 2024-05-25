@@ -13,17 +13,31 @@ type Chunk = {
 
 interface WorldStore {
   chunks: Chunk[];
-  setChunk: (x: number, y: number, z: number, blocks: Uint8Array) => void;
+  setChunk: (
+    x: number,
+    y: number,
+    z: number,
+    blocks: Uint8Array | null
+  ) => void;
   setBlock: (x: number, y: number, z: number, block: number) => void;
 }
 
 export const useWorld = create<WorldStore>((set) => ({
   chunks: [],
-  setChunk: (x: number, y: number, z: number, blocks: Uint8Array) =>
+  setChunk: (x: number, y: number, z: number, blocks: Uint8Array | null) =>
     set((state) => ({
       chunks: [
         ...state.chunks.filter((c) => c.x !== x || c.y !== y || c.z !== z),
-        { x, y, z, blocks },
+        ...(blocks
+          ? [
+              {
+                x,
+                y,
+                z,
+                blocks,
+              },
+            ]
+          : []),
       ],
     })),
   setBlock: (x: number, y: number, z: number, block: number) =>

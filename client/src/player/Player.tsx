@@ -66,10 +66,6 @@ export function Player() {
     }
   });
 
-  useEffect(() => {
-    room?.send(ClientPackageType.RequestSpawn);
-  }, [room]);
-
   useAfterPhysicsStep(() => {
     if (!room) return;
     room.send(ClientPackageType.PlayerMoves, {
