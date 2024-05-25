@@ -53,8 +53,11 @@ export function Player() {
 
   const setLocalPlayerPos = useLocalPlayer((state) => state.setPos);
 
+  const isSpawned = useRef(false);
+
   useRoomMessageHandler(ServerPackageType.TeleportPlayer, (m) => {
     if (m.playerId == room.sessionId) {
+      isSpawned.current = true;
       rbRef.current.setTranslation(
         {
           ...m,
@@ -67,20 +70,8 @@ export function Player() {
   });
 
   useAfterPhysicsStep(() => {
-    if (!room) return;
-    room.send(ClientPackageType.PlayerMoves, {
-      x: rbRef.current.translation().x,
-      y: rbRef.current.translation().y,
-      z: rbRef.current.translation().z,
-    });
-    setLocalPlayerPos(
-      rbRef.current.translation().x,
-      rbRef.current.translation().y,
-      rbRef.current.translation().z
-    );
-  });
+    if (!isSpawned.current) return;
 
-  useAfterPhysicsStep(() => {
     const grounded = characterController.computedGrounded();
     if (grounded) {
       if (jumping) {
@@ -110,6 +101,18 @@ export function Player() {
       y: currentPos.y + correctedMovement.y,
       z: currentPos.z + correctedMovement.z,
     });
+
+    if (!room) return;
+    room.send(ClientPackageType.PlayerMoves, {
+      x: rbRef.current.translation().x,
+      y: rbRef.current.translation().y,
+      z: rbRef.current.translation().z,
+    });
+    setLocalPlayerPos(
+      rbRef.current.translation().x,
+      rbRef.current.translation().y,
+      rbRef.current.translation().z
+    );
   });
 
   useEffect(() => {

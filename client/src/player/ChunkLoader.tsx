@@ -25,8 +25,7 @@ export function ChunkLoader() {
     setChunk(message.x, message.y, message.z, decompressChunk(chunkData));
   });
 
-  const isSpawned = useLocalPlayer((state) => state.spawned);
-  const setSpawned = useLocalPlayer((state) => state.setSpawned);
+  const requestedSpawn = useRef(false);
 
   useEffect(() => {
     const chunkKeys = new Set<string>();
@@ -69,8 +68,8 @@ export function ChunkLoader() {
       }
     }
 
-    if (allChunksLoaded && !isSpawned) {
-      setSpawned(true);
+    if (allChunksLoaded && !requestedSpawn.current) {
+      requestedSpawn.current = true;
       room.send(ClientPackageType.RequestSpawn);
     }
 
@@ -89,7 +88,7 @@ export function ChunkLoader() {
         loadingChunks.current.delete(`${chunkX},${chunkY},${chunkZ}`);
       }
     }
-  }, [playerPos, chunks, room, setSpawned, isSpawned, setChunk]);
+  }, [playerPos, chunks, room, setChunk]);
 
   return <BlockUpdateManager />;
 }
