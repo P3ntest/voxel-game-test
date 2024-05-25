@@ -1,8 +1,9 @@
-import { BlockUvAtlas } from "./../../../assets/compile.bun";
+// import type { BlockUvAtlas } from "./../../../assets/compile.bun";
 import terrainAtlas from "../assets/terrainAtlas.json";
 type BlockInfo = {
   id: number;
-  textureAtlas: BlockUvAtlas;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  textureAtlas: any; //BlockUvAtlas;
 };
 
 export const blockInfos: BlockInfo[] = [
@@ -28,7 +29,8 @@ export const blockInfos: BlockInfo[] = [
   },
 ].map((blockInfo) => ({
   ...blockInfo,
-  textureAtlas: (terrainAtlas.map as unknown as Record<string, BlockUvAtlas>)[
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  textureAtlas: (terrainAtlas.map as unknown as Record<string, any>)[
     blockInfo.texture
   ],
 }));

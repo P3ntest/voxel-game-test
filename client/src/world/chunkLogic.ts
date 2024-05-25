@@ -4,9 +4,9 @@ import { CELL_SIZE, getVoxelOffset } from "../../../server/src/common/world";
 import terrainAtlas from "../assets/terrainAtlas.json";
 import { blockByIdMap } from "./blockInfo";
 
-const TILE_SIZE = terrainAtlas.textureSize;
-const TILE_TEXTURE_WIDTH = terrainAtlas.width;
-const TILE_TEXTURE_HEIGHT = terrainAtlas.height;
+export const TILE_SIZE = terrainAtlas.textureSize;
+export const TILE_TEXTURE_WIDTH = terrainAtlas.width;
+export const TILE_TEXTURE_HEIGHT = terrainAtlas.height;
 
 const loader = new TextureLoader();
 export const terrainTextureSheet = loader.load("terrainAtlas.png");
@@ -57,7 +57,7 @@ export function chunkGeometryData(chunkData: Uint8Array) {
   return { vertices, normals, indices, uvs };
 }
 
-const VoxelFaces = [
+export const VoxelFaces = [
   {
     // left
     uvIndex: 2,

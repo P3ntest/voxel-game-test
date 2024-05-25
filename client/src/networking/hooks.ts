@@ -51,8 +51,11 @@ export function useRoomMessageHandler(
   }, [type]);
 }
 
-export function useSelf(): PlayerState {
+export function useSelf(): PlayerState | null {
   const sessionId = useColyseusRoom()?.sessionId;
-  const players = useColyseusState((s) => s.players)!;
-  return players.get(sessionId!)!;
+  const players = useColyseusState((s) => s.players);
+  if (!sessionId) {
+    return null;
+  }
+  return players?.get(sessionId) ?? null;
 }

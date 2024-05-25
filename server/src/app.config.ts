@@ -1,7 +1,9 @@
 import config from "@colyseus/tools";
 import { monitor } from "@colyseus/monitor";
 import { playground } from "@colyseus/playground";
-
+import express from "express";
+import { join } from "path";
+import compression from "compression";
 /**
  * Import your Room files
  */
@@ -24,14 +26,16 @@ export default config({
       res.send("It's time to kick ass and chew bubblegum!");
     });
 
-    /**
-     * Use @colyseus/playground
-     * (It is not recommended to expose this route in a production environment)
-     */
     if (process.env.NODE_ENV !== "production") {
-      app.use("/", playground);
+      app.use("/playground", playground);
+    } else {
+      const clientBuildPath = join(__dirname, "..", "client", "dist");
+      console.log("clientBuildPath", clientBuildPath);
+      app.use("/", compression(), express.static(clientBuildPath));
+      app.get("/auth/callback", (req, res) => {
+        res.sendFile(join(clientBuildPath, "index.html"));
+      });
     }
-
     /**
      * Use @colyseus/monitor
      * It is recommended to protect this route with a password

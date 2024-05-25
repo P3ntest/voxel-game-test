@@ -63,7 +63,7 @@ export function Player() {
     );
   });
 
-  useBeforePhysicsStep(() => {
+  useAfterPhysicsStep(() => {
     const grounded = characterController.computedGrounded();
     if (grounded) {
       if (jumping) {
@@ -165,7 +165,7 @@ export function Player() {
 
 function PointerLock() {
   useEffect(() => {
-    const canvas = document.querySelector("canvas");
+    const canvas = document.querySelector("body");
     const requestPointerLock = () => {
       canvas?.requestPointerLock();
     };

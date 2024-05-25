@@ -19,14 +19,15 @@ function terrainNoise(x: number, y: number) {
 
 export function generateChunkData(x: number, y: number, z: number) {
   const chunk = new Uint8Array(CELL_SIZE * CELL_SIZE * CELL_SIZE);
+  const leakingBlocks: number[][] = [];
 
   // if the chunk is above terrain height, we dont need to generate anything
   if (y >= (TERRAIN_HEIGHT + SEA_LEVEL) / CELL_SIZE) {
-    return chunk;
+    return { chunk, leakingBlocks };
   } else if (y < (SEA_LEVEL - TERRAIN_HEIGHT) / CELL_SIZE) {
     // if the chunk is below the terrain height, we can just fill it with solid blocks
     chunk.fill(3);
-    return chunk;
+    return { chunk, leakingBlocks };
   }
 
   for (let vX = 0; vX < CELL_SIZE; vX++) {
@@ -51,13 +52,35 @@ export function generateChunkData(x: number, y: number, z: number) {
     }
   }
 
-  generateTrees(chunk, x, y, z);
+  const treeBlocks = generateTrees(chunk, x, y, z);
 
-  return chunk;
+  const allStructureBlocks = [...treeBlocks];
+
+  for (const [lX, lY, lZ, block] of allStructureBlocks) {
+    const offset = getVoxelOffset(lX, lY, lZ);
+    if (offset !== -1) {
+      chunk[offset] = block;
+    } else {
+      // translate to global coords
+      leakingBlocks.push([
+        lX + CELL_SIZE * x,
+        lY + CELL_SIZE * y,
+        lZ + CELL_SIZE * z,
+        block,
+      ]);
+    }
+  }
+
+  return {
+    chunk,
+    leakingBlocks,
+  };
 }
 
 function generateTrees(chunk: Uint8Array, x: number, y: number, z: number) {
   // TODO: nicer
+  const treeBlocks: number[][] = [];
+
   const padding = 5;
   const gen = alea(`${x},${y},${z}`);
   const numTrees = Math.round(gen() * 10);
@@ -68,23 +91,29 @@ function generateTrees(chunk: Uint8Array, x: number, y: number, z: number) {
   for (const tree of trees) {
     let y = CELL_SIZE - 1;
     while (y > 0) {
-      const currentBlock = chunk[getVoxelOffset(tree.x, y, tree.z)];
+      const offset = getVoxelOffset(tree.x, y, tree.z);
+      const currentBlock = chunk[offset];
 
       if (currentBlock == 1) {
         for (const b of treeStructure) {
-          chunk[getVoxelOffset(tree.x + b[0], y + b[1], tree.z + b[2])] = b[3];
+          treeBlocks.push([tree.x + b[0], y + b[1], tree.z + b[2], b[3]]);
         }
         break;
       }
       y--;
     }
   }
+
+  return treeBlocks;
 }
 
 const leaves = [];
 for (let x = -2; x <= 2; x++) {
   for (let z = -2; z <= 2; z++) {
     for (let y = 0; y <= 2; y++) {
+      if (Math.abs(x) + Math.abs(z) + Math.abs(y) > 3) {
+        continue;
+      }
       leaves.push([x, y + 5, z, 5]);
     }
   }

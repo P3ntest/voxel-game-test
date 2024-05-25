@@ -32,6 +32,15 @@ export class VoxelRoom extends Room<VoxelRoomState> {
 
     this.onMessage(ClientPackageType.UpdateBlock, (client, message) => {
       const { x, y, z, type } = message;
+      if (type === 0) {
+        const old = this.worldManager.getBlock(x, y, z);
+        if (old === 0) {
+          return;
+        }
+        const player = this.state.players.get(client.sessionId);
+        console.log("adding", old);
+        player.inventory.addItem(old, 1);
+      }
       this.worldManager.setBlock(x, y, z, type);
       this.broadcast(ServerPackageType.BlockUpdate, message);
     });

@@ -12,6 +12,7 @@ import {
 import { OtherPlayers } from "./player/OtherPlayers";
 import { Broadcaster } from "./networking/Broadcaster";
 import { ChunkLoader } from "./player/ChunkLoader";
+import { PlayerInventory } from "./ui/PlayerInventory";
 
 export default function App() {
   useEffect(() => {
@@ -54,7 +55,9 @@ export default function App() {
           }}
         />
       </div>
+      <PlayerInventory />
       <Canvas>
+        <fog attach="fog" args={[0xffffff, 90, 100]} />
         <Broadcaster />
         <KeyboardControls map={keyboardControlsMap}>
           <Suspense>
