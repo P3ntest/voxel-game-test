@@ -71,7 +71,7 @@ export function BlockItemRenderer({ itemId }: { itemId: number }) {
         near={0.1}
         far={1000}
       />
-      <group rotation={[Math.PI / 4, Math.PI / 4, 0]}>
+      <group rotation={[Math.PI / 6, Math.PI / 4, 0]}>
         <mesh
           geometry={geoData.geometry}
           position={[-0.5, -0.5, -0.5]}

@@ -44,5 +44,3 @@ export const blockByIdMap: Record<number, BlockInfo> = blockInfos.reduce(
   },
   {}
 );
-
-console.log(blockByIdMap);
