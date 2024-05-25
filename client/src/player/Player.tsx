@@ -22,8 +22,12 @@ import { useWorld } from "../world/worldStore";
 import { calculateClickPosition } from "./clickLogic";
 import { terrainBodies } from "../util/worldUtils";
 import { useColyseusRoom } from "../networking/colyseus";
-import { ClientPackageType } from "../../../server/src/common/packets";
+import {
+  ClientPackageType,
+  ServerPackageType,
+} from "../../../server/src/common/packets";
 import { useLocalPlayer } from "./playerStore";
+import { useRoomMessageHandler } from "../networking/hooks";
 
 export function Player() {
   const r = useRapier();
@@ -48,6 +52,23 @@ export function Player() {
   const room = useColyseusRoom();
 
   const setLocalPlayerPos = useLocalPlayer((state) => state.setPos);
+
+  useRoomMessageHandler(ServerPackageType.TeleportPlayer, (m) => {
+    if (m.playerId == room.sessionId) {
+      rbRef.current.setTranslation(
+        {
+          ...m,
+        },
+        true
+      );
+      gravityVelocity.current = 0;
+      console.log("got tpd", m);
+    }
+  });
+
+  useEffect(() => {
+    room?.send(ClientPackageType.RequestSpawn);
+  }, [room]);
 
   useAfterPhysicsStep(() => {
     if (!room) return;

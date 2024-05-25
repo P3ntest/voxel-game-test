@@ -1,5 +1,9 @@
 import { getVoxelOffset, translateGlobalToChunkCoords } from "../common/world";
-import { generateChunkData } from "../common/worldGenerator";
+import {
+  SEA_LEVEL,
+  TERRAIN_HEIGHT,
+  generateChunkData,
+} from "../common/worldGenerator";
 
 export const CELL_SIZE = 16;
 export const WORLD_HEIGHT_CELLS = 16;
@@ -93,5 +97,19 @@ export class WorldManager {
     }
     const index = getVoxelOffset(coords.localX, coords.localY, coords.localZ);
     return chunk.voxels[index];
+  }
+
+  findSpawnableBlock(x: number, z: number) {
+    const MAX_HEIGHT = SEA_LEVEL + TERRAIN_HEIGHT + 90;
+    const MIN_HEIGHT = SEA_LEVEL - TERRAIN_HEIGHT - 90;
+    for (let y = MAX_HEIGHT; y >= MIN_HEIGHT; y--) {
+      const coords = translateGlobalToChunkCoords(x, y, z);
+      this.getChunk(coords.chunkX, coords.chunkY, coords.chunkZ);
+      if (this.getBlock(x, y, z) != 0) {
+        return [x, y + 1, z];
+      }
+      console.log(this.getBlock(x, y, z));
+    }
+    return [x, MAX_HEIGHT, z];
   }
 }

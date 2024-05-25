@@ -124,4 +124,13 @@ export const VoxelFaces = [
       { pos: [1, 1, 1], uv: [1, 1] },
     ],
   },
-];
+].map((face) => {
+  // move uv 0.001 to prevent texture bleeding
+  const padding = 0.02;
+  for (const corner of face.corners) {
+    corner.uv = corner.uv.map((uv) =>
+      uv == 0 ? padding : uv == 1 ? 1 - padding : uv
+    );
+  }
+  return face;
+});

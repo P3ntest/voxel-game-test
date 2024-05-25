@@ -38,11 +38,20 @@ export class VoxelRoom extends Room<VoxelRoomState> {
           return;
         }
         const player = this.state.players.get(client.sessionId);
-        console.log("adding", old);
         player.inventory.addItem(old, 1);
       }
       this.worldManager.setBlock(x, y, z, type);
       this.broadcast(ServerPackageType.BlockUpdate, message);
+    });
+
+    this.onMessage(ClientPackageType.RequestSpawn, (client, message) => {
+      const spawnPoint = this.worldManager.findSpawnableBlock(0, 0);
+      client.send(ServerPackageType.TeleportPlayer, {
+        playerId: client.sessionId,
+        x: spawnPoint[0] + 0.5,
+        y: spawnPoint[1] + 1.5,
+        z: spawnPoint[2] + 0.5,
+      });
     });
   }
 

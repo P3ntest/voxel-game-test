@@ -24,4 +24,14 @@ export const blockTextures = {
     bottom: "leaves/side",
     sides: "leaves/side",
   },
+  sand: {
+    top: "sand/side",
+    bottom: "sand/side",
+    sides: "sand/side",
+  },
+  copperOre: {
+    top: "copper_ore/side",
+    bottom: "copper_ore/side",
+    sides: "copper_ore/side",
+  },
 };

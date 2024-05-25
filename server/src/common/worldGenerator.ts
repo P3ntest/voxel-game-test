@@ -1,20 +1,49 @@
-import { createNoise2D } from "simplex-noise";
+import { createNoise2D, createNoise3D } from "simplex-noise";
 
 import alea from "alea";
 import { CELL_SIZE, getVoxelOffset } from "./world";
 
 export const SEA_LEVEL = 0; // the 5th layer in the middl
-const TERRAIN_HEIGHT = CELL_SIZE;
+export const TERRAIN_HEIGHT = 100;
+const MOUNTAIN_HEIGHT = 0;
 
-const prng = alea("seed");
+const prng = alea("a");
 const noise2d = createNoise2D(prng);
+const noise3d = createNoise3D(prng);
+function octaveNoise2d(
+  x: number,
+  y: number,
+  octaves: number,
+  scale: number = 1,
+  offset: number = 0
+) {
+  let result = 0;
+  let amp = 1;
+  let freq = 1 / scale;
+  let max = 0;
+
+  for (let i = 0; i < octaves; i++) {
+    result += noise2d((x + offset) * freq, (y + offset) * freq) * amp;
+    max += amp;
+    amp /= 2;
+    freq *= 2;
+  }
+
+  return result / max;
+}
 
 function terrainNoise(x: number, y: number) {
-  return (
-    1 * noise2d(x / 150, y / 150) +
-    0.4 * noise2d(x / 70, y / 70) +
-    0.2 * noise2d(x / 20, y / 20)
-  );
+  const height = octaveNoise2d(x, y, 8, 500, 200);
+
+  const temperature = octaveNoise2d(x, y, 4, 700, 1000); // used for biome generation
+
+  const stoneHeight = octaveNoise2d(x / 100, y / 100, 4) * 20 + MOUNTAIN_HEIGHT;
+
+  return {
+    height,
+    temperature,
+    stoneHeight,
+  };
 }
 
 export function generateChunkData(x: number, y: number, z: number) {
@@ -32,20 +61,34 @@ export function generateChunkData(x: number, y: number, z: number) {
 
   for (let vX = 0; vX < CELL_SIZE; vX++) {
     for (let vZ = 0; vZ < CELL_SIZE; vZ++) {
-      const height = terrainNoise(x * CELL_SIZE + vX, z * CELL_SIZE + vZ);
+      const globalX = x * CELL_SIZE + vX;
+      const globalZ = z * CELL_SIZE + vZ;
+      const { height, temperature, stoneHeight } = terrainNoise(
+        x * CELL_SIZE + vX,
+        z * CELL_SIZE + vZ
+      );
 
-      const yHeight = Math.floor(height * (TERRAIN_HEIGHT / 1.6) + SEA_LEVEL);
+      const biome = temperature > 0.3 ? "desert" : "forest";
+
+      const yHeight = Math.floor(height * TERRAIN_HEIGHT + SEA_LEVEL);
 
       for (let vY = 0; vY < CELL_SIZE; vY++) {
+        const globalY = y * CELL_SIZE + vY;
         let voxel = 0;
         const delta = yHeight - (y * CELL_SIZE + vY);
         if (delta < 0) continue;
-        if (delta == 0) {
-          voxel = 1;
-        } else if (delta < 3) {
-          voxel = 2;
-        } else {
-          voxel = 3;
+        if (biome === "desert") {
+          voxel = 6;
+        } else if (biome === "forest") {
+          if (yHeight > SEA_LEVEL + stoneHeight) {
+            voxel = stoneLikeBlock(globalX, globalY, globalZ);
+          } else if (delta == 0) {
+            voxel = 1;
+          } else if (delta < 3) {
+            voxel = 2;
+          } else {
+            voxel = stoneLikeBlock(globalX, globalY, globalZ);
+          }
         }
         chunk[vY * CELL_SIZE * CELL_SIZE + vZ * CELL_SIZE + vX] = voxel;
       }
@@ -75,6 +118,16 @@ export function generateChunkData(x: number, y: number, z: number) {
     chunk,
     leakingBlocks,
   };
+}
+
+function stoneLikeBlock(x: number, y: number, z: number) {
+  const noise = noise3d(x / 15, y / 15, z / 15);
+
+  if (noise > 0.95) {
+    return 7;
+  } else {
+    return 3;
+  }
 }
 
 function generateTrees(chunk: Uint8Array, x: number, y: number, z: number) {
