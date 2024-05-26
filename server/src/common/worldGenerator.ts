@@ -7,7 +7,7 @@ export const SEA_LEVEL = 0; // the 5th layer in the middl
 export const TERRAIN_HEIGHT = 100;
 const MOUNTAIN_HEIGHT = 0;
 
-const prng = alea("a");
+const prng = alea("b");
 const noise2d = createNoise2D(prng);
 const noise3d = createNoise3D(prng);
 function octaveNoise2d(
@@ -32,6 +32,49 @@ function octaveNoise2d(
   return result / max;
 }
 
+function octaveNoise3d(
+  x: number,
+  y: number,
+  z: number,
+  octaves: number,
+  scale: number = 1,
+  offset: number = 0
+) {
+  let result = 0;
+  let amp = 1;
+  let freq = 1 / scale;
+  let max = 0;
+
+  for (let i = 0; i < octaves; i++) {
+    result +=
+      noise3d((x + offset) * freq, (y + offset) * freq, (z + offset) * freq) *
+      amp;
+    max += amp;
+    amp /= 2;
+    freq *= 2;
+  }
+
+  return result / max;
+}
+
+function caveNoise(x: number, y: number, z: number) {
+  const isHollow =
+    octaveNoise3d(x, y * 3, z, 3, 40) > 0.5 ||
+    octaveNoise3d(x, y / 3, z, 2, 40) > 0.6;
+  const isOre = octaveNoise3d(x, y, z, 2, 10) > 0.7;
+
+  const stoneTypeValue = octaveNoise3d(x, y, z, 3, 50);
+  const STONE_AMOUNT = 0.3;
+  const stoneType =
+    stoneTypeValue < -STONE_AMOUNT ? 9 : stoneTypeValue > STONE_AMOUNT ? 10 : 3;
+
+  return {
+    isHollow,
+    isOre,
+    stoneType,
+  };
+}
+
 function terrainNoise(x: number, y: number) {
   const height = octaveNoise2d(x, y, 8, 500, 200);
 
@@ -39,10 +82,18 @@ function terrainNoise(x: number, y: number) {
 
   const stoneHeight = octaveNoise2d(x / 100, y / 100, 4) * 20 + MOUNTAIN_HEIGHT;
 
+  // calculate the chance of vegetation per block
+  const vegetationDensity = octaveNoise2d(x, y, 4, 100, 1000);
+  const MIN_VEG_CHANCE = 1 / 500;
+  const MAX_VEG_CHANCE = 1 / 20;
+  const vegetationChance =
+    vegetationDensity * (MAX_VEG_CHANCE - MIN_VEG_CHANCE) + MIN_VEG_CHANCE;
+
   return {
     height,
     temperature,
     stoneHeight,
+    vegetationChance,
   };
 }
 
@@ -53,20 +104,16 @@ export function generateChunkData(x: number, y: number, z: number) {
   // if the chunk is above terrain height, we dont need to generate anything
   if (y >= (TERRAIN_HEIGHT + SEA_LEVEL) / CELL_SIZE) {
     return { chunk, leakingBlocks };
-  } else if (y < (SEA_LEVEL - TERRAIN_HEIGHT) / CELL_SIZE) {
-    // if the chunk is below the terrain height, we can just fill it with solid blocks
-    chunk.fill(3);
-    return { chunk, leakingBlocks };
   }
+
+  const allStructureBlocks = [];
 
   for (let vX = 0; vX < CELL_SIZE; vX++) {
     for (let vZ = 0; vZ < CELL_SIZE; vZ++) {
       const globalX = x * CELL_SIZE + vX;
       const globalZ = z * CELL_SIZE + vZ;
-      const { height, temperature, stoneHeight } = terrainNoise(
-        x * CELL_SIZE + vX,
-        z * CELL_SIZE + vZ
-      );
+      const { height, temperature, stoneHeight, vegetationChance } =
+        terrainNoise(x * CELL_SIZE + vX, z * CELL_SIZE + vZ);
 
       const biome = temperature > 0.3 ? "desert" : "forest";
 
@@ -79,11 +126,21 @@ export function generateChunkData(x: number, y: number, z: number) {
         if (delta < 0) continue;
         if (biome === "desert") {
           voxel = 6;
+          if (prng() < vegetationChance) {
+            allStructureBlocks.push(
+              ...mapStructure(cactusStructure(globalX, globalZ), vX, vY, vZ)
+            );
+          }
         } else if (biome === "forest") {
           if (yHeight > SEA_LEVEL + stoneHeight) {
             voxel = stoneLikeBlock(globalX, globalY, globalZ);
           } else if (delta == 0) {
             voxel = 1;
+            if (prng() < vegetationChance) {
+              allStructureBlocks.push(
+                ...mapStructure(treeStructure(), vX, vY, vZ)
+              );
+            }
           } else if (delta < 3) {
             voxel = 2;
           } else {
@@ -94,10 +151,6 @@ export function generateChunkData(x: number, y: number, z: number) {
       }
     }
   }
-
-  const treeBlocks = generateTrees(chunk, x, y, z);
-
-  const allStructureBlocks = [...treeBlocks];
 
   for (const [lX, lY, lZ, block] of allStructureBlocks) {
     const offset = getVoxelOffset(lX, lY, lZ);
@@ -121,51 +174,24 @@ export function generateChunkData(x: number, y: number, z: number) {
 }
 
 function stoneLikeBlock(x: number, y: number, z: number) {
-  const noise = noise3d(x / 15, y / 15, z / 15);
+  const { isHollow, isOre, stoneType } = caveNoise(x, y, z);
 
-  if (noise > 0.95) {
+  if (isHollow) {
+    return 0;
+  } else if (isOre) {
     return 7;
   } else {
-    return 3;
+    return stoneType;
   }
 }
 
-function generateTrees(chunk: Uint8Array, x: number, y: number, z: number) {
-  // TODO: nicer
-  const treeBlocks: number[][] = [];
-
-  const padding = 5;
-  const gen = alea(`${x},${y},${z}`);
-  const numTrees = Math.round(gen() * 10);
-  const trees = new Array(numTrees).fill({
-    x: Math.round(gen() * (CELL_SIZE - 2 * padding) + padding),
-    z: Math.round(gen() * (CELL_SIZE - 2 * padding) + padding),
-  });
-  for (const tree of trees) {
-    let y = CELL_SIZE - 1;
-    while (y > 0) {
-      const offset = getVoxelOffset(tree.x, y, tree.z);
-      const currentBlock = chunk[offset];
-
-      if (currentBlock == 1) {
-        for (const b of treeStructure()) {
-          treeBlocks.push([tree.x + b[0], y + b[1], tree.z + b[2], b[3]]);
-        }
-        break;
-      } else if (currentBlock == 6) {
-        for (const b of cactusStructure(
-          x * CELL_SIZE + tree.x,
-          z * CELL_SIZE + tree.z
-        )) {
-          treeBlocks.push([tree.x + b[0], y + b[1], tree.z + b[2], b[3]]);
-        }
-        break;
-      }
-      y--;
-    }
-  }
-
-  return treeBlocks;
+function mapStructure(structure: number[][], x: number, y: number, z: number) {
+  return structure.map(([dx, dy, dz, block]) => [
+    x + dx,
+    y + dy,
+    z + dz,
+    block,
+  ]);
 }
 
 function treeStructure() {

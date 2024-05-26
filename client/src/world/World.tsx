@@ -27,6 +27,7 @@ export function World() {
     const allChunkIds = chunks.map(
       (chunk) => `${chunk.x},${chunk.y},${chunk.z}`
     );
+    console.log("loading chunk", `${newChunk.x},${newChunk.y},${newChunk.z}`);
     setVisibleChunksIds((prev) => [
       ...prev.filter((id) => allChunkIds.includes(id)),
       `${newChunk.x},${newChunk.y},${newChunk.z}`,

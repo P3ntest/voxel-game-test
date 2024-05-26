@@ -63,7 +63,8 @@ export default function App() {
           <Suspense>
             <Physics timeStep={1 / 20}>
               <ambientLight intensity={Math.PI / 2} />
-              <directionalLight position={[0, 10, 0]} intensity={1} />
+              <directionalLight position={[10, 20, 0]} intensity={1} />
+
               <World />
               <Player />
               <ChunkLoader />

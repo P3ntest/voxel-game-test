@@ -39,4 +39,14 @@ export const blockTextures = {
     bottom: "cactus/bottom",
     sides: "cactus/side",
   },
+  diorite: {
+    top: "diorite/side",
+    bottom: "diorite/side",
+    sides: "diorite/side",
+  },
+  andesite: {
+    top: "andesite/side",
+    bottom: "andesite/side",
+    sides: "andesite/side",
+  },
 };

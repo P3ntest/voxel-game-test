@@ -1,4 +1,4 @@
-export const CELL_SIZE = 16;
+export const CELL_SIZE = 32;
 export const WORLD_HEIGHT_CELLS = 16;
 
 export function translateGlobalToChunkCoords(x: number, y: number, z: number) {

@@ -7,7 +7,6 @@ import {
 } from "../common/worldGenerator";
 import { VoxelRoom } from "../rooms/VoxelRoom";
 
-export const CELL_SIZE = 16;
 export const WORLD_HEIGHT_CELLS = 16;
 
 function chunkKey(x: number, y: number, z: number) {
