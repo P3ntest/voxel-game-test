@@ -34,4 +34,9 @@ export const blockTextures = {
     bottom: "copper_ore/side",
     sides: "copper_ore/side",
   },
+  cactus: {
+    top: "cactus/top",
+    bottom: "cactus/bottom",
+    sides: "cactus/side",
+  },
 };

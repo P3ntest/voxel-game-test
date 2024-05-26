@@ -118,8 +118,14 @@ export function Player() {
   useEffect(() => {
     const moveListener = (e: MouseEvent) => {
       // move the camera based on mouse movement
-      headRef.current.rotation.y -= e.movementX * 0.002;
-      camRef.current.rotation.x -= e.movementY * 0.002;
+      const y = headRef.current.rotation.y - e.movementX * 0.002;
+      headRef.current.rotation.y = y % (Math.PI * 4);
+
+      const x = camRef.current.rotation.x - e.movementY * 0.002;
+      camRef.current.rotation.x = Math.min(
+        Math.PI / 2,
+        Math.max(-Math.PI / 2, x)
+      );
     };
     window.addEventListener("mousemove", moveListener);
     return () => window.removeEventListener("mousemove", moveListener);
@@ -144,18 +150,17 @@ export function Player() {
         }
         const voxel = calculateClickPosition(i.point, i.face!.normal);
         if (!e.shiftKey) {
-          room?.send(ClientPackageType.UpdateBlock, {
+          room?.send(ClientPackageType.BreakBlock, {
             x: voxel.voxel.x,
             y: voxel.voxel.y,
             z: voxel.voxel.z,
             type: 0,
           });
         } else {
-          room?.send(ClientPackageType.UpdateBlock, {
+          room?.send(ClientPackageType.PlaceBlock, {
             x: voxel.faceVoxel.x,
             y: voxel.faceVoxel.y,
             z: voxel.faceVoxel.z,
-            type: 4,
           });
         }
         break;

@@ -148,7 +148,15 @@ function generateTrees(chunk: Uint8Array, x: number, y: number, z: number) {
       const currentBlock = chunk[offset];
 
       if (currentBlock == 1) {
-        for (const b of treeStructure) {
+        for (const b of treeStructure()) {
+          treeBlocks.push([tree.x + b[0], y + b[1], tree.z + b[2], b[3]]);
+        }
+        break;
+      } else if (currentBlock == 6) {
+        for (const b of cactusStructure(
+          x * CELL_SIZE + tree.x,
+          z * CELL_SIZE + tree.z
+        )) {
           treeBlocks.push([tree.x + b[0], y + b[1], tree.z + b[2], b[3]]);
         }
         break;
@@ -160,25 +168,37 @@ function generateTrees(chunk: Uint8Array, x: number, y: number, z: number) {
   return treeBlocks;
 }
 
-const leaves = [];
-for (let x = -2; x <= 2; x++) {
-  for (let z = -2; z <= 2; z++) {
-    for (let y = 0; y <= 2; y++) {
-      if (Math.abs(x) + Math.abs(z) + Math.abs(y) > 3) {
-        continue;
+function treeStructure() {
+  const treeHeight = Math.round(Math.random() * 6) + 4;
+  const numLeaves = Math.round(Math.random() * 2) + 2;
+
+  const leaves = [];
+  for (let x = -2; x <= 2; x++) {
+    for (let z = -2; z <= 2; z++) {
+      for (let y = 0; y <= 2; y++) {
+        if (Math.abs(x) + Math.abs(z) + Math.abs(y) > numLeaves) {
+          continue;
+        }
+        leaves.push([x, y + treeHeight, z, 5]);
       }
-      leaves.push([x, y + 5, z, 5]);
     }
   }
+
+  const stem = [];
+  for (let i = 0; i < treeHeight; i++) {
+    stem.push([0, i, 0, 4]);
+  }
+
+  const treeStructure = [...leaves, ...stem];
+
+  return treeStructure;
 }
 
-const treeStructure = [
-  ...leaves,
-  [0, -1, 0, 4],
-  [0, 0, 0, 4],
-  [0, 1, 0, 4],
-  [0, 2, 0, 4],
-  [0, 3, 0, 4],
-  [0, 4, 0, 4],
-  [0, 5, 0, 4],
-];
+function cactusStructure(x: number, z: number) {
+  const cactus = [];
+  const height = noise2d(x, z) * 3 + 5;
+  for (let i = 0; i < height; i++) {
+    cactus.push([0, i, 0, 8]);
+  }
+  return cactus;
+}

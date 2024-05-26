@@ -13,21 +13,6 @@ export function calculateClickPosition(
     .clone()
     .add(faceNormal.clone().multiplyScalar(0.5))
     .floor();
-  // Determine the clicked face based on the face normal.
-  //   let face: string;
-  //   if (faceNormal.x === 1) {
-  //     face = "right";
-  //   } else if (faceNormal.x === -1) {
-  //     face = "left";
-  //   } else if (faceNormal.y === 1) {
-  //     face = "top";
-  //   } else if (faceNormal.y === -1) {
-  //     face = "bottom";
-  //   } else if (faceNormal.z === 1) {
-  //     face = "front";
-  //   } else {
-  //     face = "back";
-  //   }
   return {
     voxel: clickedVoxel,
     faceVoxel,

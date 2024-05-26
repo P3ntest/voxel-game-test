@@ -1,3 +1,4 @@
+import { cli } from "@colyseus/loadtest";
 import { Room, Client } from "@colyseus/core";
 import { PlayerState, VoxelRoomState } from "./schema/VoxelRoomState";
 import { ClientPackageType, ServerPackageType } from "../common/packets";
@@ -7,7 +8,7 @@ import { compressChunk } from "../common/compression";
 export class VoxelRoom extends Room<VoxelRoomState> {
   maxClients = 4;
 
-  worldManager = new WorldManager();
+  worldManager = new WorldManager(this);
 
   onCreate(options: any) {
     this.autoDispose = false;
@@ -31,18 +32,24 @@ export class VoxelRoom extends Room<VoxelRoomState> {
       });
     });
 
-    this.onMessage(ClientPackageType.UpdateBlock, (client, message) => {
-      const { x, y, z, type } = message;
-      if (type === 0) {
-        const old = this.worldManager.getBlock(x, y, z);
-        if (old === 0) {
-          return;
-        }
-        const player = this.state.players.get(client.sessionId);
-        player.inventory.addItem(old, 1);
+    this.onMessage(ClientPackageType.BreakBlock, (client, message) => {
+      const { x, y, z } = message;
+      const current = this.worldManager.getBlock(x, y, z);
+      if (current === 0) {
+        return;
       }
-      this.worldManager.setBlock(x, y, z, type);
-      this.broadcast(ServerPackageType.BlockUpdate, message);
+      const player = this.state.players.get(client.sessionId);
+      player.inventory.addItem(current, 1);
+      this.worldManager.setBlock(x, y, z, 0);
+    });
+
+    this.onMessage(ClientPackageType.PlaceBlock, (client, message) => {
+      const { x, y, z } = message;
+      const player = this.state.players.get(client.sessionId);
+      const blockType = player.inventory.getSlot(player.inventory.selectedSlot);
+      if (blockType === null) return;
+      player.inventory.removeFromSlot(player.inventory.selectedSlot, 1);
+      this.worldManager.setBlock(x, y, z, blockType.id);
     });
 
     this.onMessage(ClientPackageType.RequestSpawn, (client, message) => {
@@ -53,6 +60,11 @@ export class VoxelRoom extends Room<VoxelRoomState> {
         y: spawnPoint[1] + 3.5,
         z: spawnPoint[2] + 0.5,
       });
+    });
+
+    this.onMessage(ClientPackageType.SelectSlot, (client, message) => {
+      const player = this.state.players.get(client.sessionId);
+      player.inventory.selectedSlot = message.slot;
     });
   }
 

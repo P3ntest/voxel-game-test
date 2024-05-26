@@ -1,11 +1,25 @@
 import { BlockItemRenderer } from "./BlockRenderer";
 import { useColyseusRoom, useColyseusState } from "../networking/colyseus";
+import { useEffect } from "react";
+import { ClientPackageType } from "../../../server/src/common/packets";
 
 export function PlayerInventory() {
   const room = useColyseusRoom();
   const inventory = useColyseusState()?.players.get(
     room?.sessionId ?? ""
   )?.inventory;
+
+  useEffect(() => {
+    const listener = (e) => {
+      new Array(9).fill(null).forEach((_, i) => {
+        if (e.key === `${i + 1}`) {
+          room?.send(ClientPackageType.SelectSlot, { slot: i });
+        }
+      });
+    };
+    window.addEventListener("keydown", listener);
+    return () => window.removeEventListener("keydown", listener);
+  });
 
   if (!inventory) return null;
 

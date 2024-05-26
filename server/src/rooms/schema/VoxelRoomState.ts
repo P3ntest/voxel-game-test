@@ -30,6 +30,32 @@ export class Inventory extends Schema {
     }
   }
 
+  getSlot(slot: number) {
+    if (slot < 0 || slot >= this.maxSlots) {
+      return null;
+    }
+    if (this.slotIds[slot] === 0 || this.slotCounts[slot] === 0) {
+      return null;
+    }
+    return { id: this.slotIds[slot], count: this.slotCounts[slot] };
+  }
+  removeFromSlot(slot: number, count: number) {
+    if (slot < 0 || slot >= this.maxSlots) {
+      return false;
+    }
+    if (this.slotIds[slot] === 0 || this.slotCounts[slot] === 0) {
+      return false;
+    }
+    if (this.slotCounts[slot] < count) {
+      return false;
+    }
+    this.slotCounts[slot] -= count;
+    if (this.slotCounts[slot] === 0) {
+      this.slotIds[slot] = 0;
+    }
+    return true;
+  }
+
   addItem(itemId: number, count: number) {
     // iterate over all slots
     for (let i = 0; i < this.maxSlots; i++) {

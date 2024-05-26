@@ -1,9 +1,11 @@
+import { ServerPackageType } from "../common/packets";
 import { getVoxelOffset, translateGlobalToChunkCoords } from "../common/world";
 import {
   SEA_LEVEL,
   TERRAIN_HEIGHT,
   generateChunkData,
 } from "../common/worldGenerator";
+import { VoxelRoom } from "../rooms/VoxelRoom";
 
 export const CELL_SIZE = 16;
 export const WORLD_HEIGHT_CELLS = 16;
@@ -33,6 +35,8 @@ export class WorldManager {
   chunks = new Map<string, Chunk>();
 
   _futureBlocks = new Map<string, Set<number[]>>();
+
+  constructor(private room: VoxelRoom) {}
 
   generateChunk(x: number, y: number, z: number) {
     const key = chunkKey(x, y, z);
@@ -83,6 +87,13 @@ export class WorldManager {
     }
     const index = getVoxelOffset(coords.localX, coords.localY, coords.localZ);
     chunk.voxels[index] = block;
+
+    this.room.broadcast(ServerPackageType.BlockUpdate, {
+      x,
+      y,
+      z,
+      type: block,
+    });
   }
 
   getBlock(x: number, y: number, z: number) {

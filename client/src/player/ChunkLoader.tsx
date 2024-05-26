@@ -8,6 +8,7 @@ import {
 } from "../../../server/src/common/packets";
 import { decompressChunk } from "../../../server/src/common/compression";
 import { useRoomMessageHandler } from "../networking/hooks";
+import { CELL_SIZE } from "../../../server/src/common/world";
 
 export function ChunkLoader() {
   const playerPos = useLocalPlayer();
@@ -33,9 +34,9 @@ export function ChunkLoader() {
       chunkKeys.add(`${chunk.x},${chunk.y},${chunk.z}`);
     }
 
-    const playerChunkX = Math.floor(playerPos.x / 16);
-    const playerChunkY = Math.floor(playerPos.y / 16);
-    const playerChunkZ = Math.floor(playerPos.z / 16);
+    const playerChunkX = Math.floor(playerPos.x / CELL_SIZE);
+    const playerChunkY = Math.floor(playerPos.y / CELL_SIZE);
+    const playerChunkZ = Math.floor(playerPos.z / CELL_SIZE);
 
     // let allChunksLoaded = true;
 

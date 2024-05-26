@@ -77,7 +77,7 @@ export function BlockItemRenderer({ itemId }: { itemId: number }) {
           position={[-0.5, -0.5, -0.5]}
           // have a point look at the camera
         >
-          <meshStandardMaterial color="orange" map={terrainTextureSheet} />
+          <meshStandardMaterial map={terrainTextureSheet} />
         </mesh>
       </group>
     </Canvas>
