@@ -14,7 +14,7 @@ export function ChunkLoader() {
   const chunks = useWorld((state) => state.chunks);
   const setChunk = useWorld((state) => state.setChunk);
 
-  const viewDistance = 4;
+  const viewDistance = 3;
 
   const room = useColyseusRoom();
 
@@ -25,7 +25,7 @@ export function ChunkLoader() {
     setChunk(message.x, message.y, message.z, decompressChunk(chunkData));
   });
 
-  const requestedSpawn = useRef(false);
+  // const requestedSpawn = useRef(false);
 
   useEffect(() => {
     const chunkKeys = new Set<string>();
@@ -37,7 +37,7 @@ export function ChunkLoader() {
     const playerChunkY = Math.floor(playerPos.y / 16);
     const playerChunkZ = Math.floor(playerPos.z / 16);
 
-    let allChunksLoaded = true;
+    // let allChunksLoaded = true;
 
     // remove loading chunks that timed out
     for (const [key, time] of loadingChunks.current) {
@@ -56,7 +56,7 @@ export function ChunkLoader() {
             !chunkKeys.has(chunkKey) &&
             !loadingChunks.current.has(chunkKey)
           ) {
-            allChunksLoaded = false;
+            // allChunksLoaded = false;
             loadingChunks.current.set(chunkKey, Date.now());
             room?.send(ClientPackageType.RequestLoadChunk, {
               x: playerChunkX + x,
@@ -68,10 +68,10 @@ export function ChunkLoader() {
       }
     }
 
-    if (allChunksLoaded && !requestedSpawn.current) {
-      requestedSpawn.current = true;
-      room.send(ClientPackageType.RequestSpawn);
-    }
+    // if (allChunksLoaded && !requestedSpawn.current) {
+    //   requestedSpawn.current = true;
+    //   room.send(ClientPackageType.RequestSpawn);
+    // }
 
     // despawn chunks that are too far away
     for (const chunk of chunks) {
