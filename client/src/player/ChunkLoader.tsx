@@ -37,6 +37,7 @@ export function ChunkLoader() {
   useEffect(() => {
     if (!room) {
       console.debug("no room");
+      return;
     }
     const chunkKeys = new Set<string>();
     for (const chunk of chunks) {
@@ -63,6 +64,8 @@ export function ChunkLoader() {
       viewDistance,
       chunkKeys,
       loadingChunks,
+      chunks,
+      room,
     });
 
     for (let x = -viewDistance; x <= viewDistance; x++) {
