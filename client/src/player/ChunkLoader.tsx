@@ -35,6 +35,9 @@ export function ChunkLoader() {
   });
 
   useEffect(() => {
+    if (!room) {
+      console.debug("no room");
+    }
     const chunkKeys = new Set<string>();
     for (const chunk of chunks) {
       chunkKeys.add(`${chunk.x},${chunk.y},${chunk.z}`);
@@ -101,7 +104,7 @@ export function ChunkLoader() {
         loadingChunks.current.delete(`${chunkX},${chunkY},${chunkZ}`);
       }
     }
-  }, [playerPos, chunks, room, setChunk]);
+  }, [room, playerPos, chunks, setChunk]);
 
   return <BlockUpdateManager />;
 }
