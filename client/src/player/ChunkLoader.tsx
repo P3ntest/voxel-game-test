@@ -26,17 +26,8 @@ export function ChunkLoader() {
     setChunk(message.x, message.y, message.z, decompressChunk(chunkData));
   });
 
-  console.debug("render chunk loader");
-  console.debug({
-    playerPos,
-    chunks,
-    room,
-    loadingChunks,
-  });
-
   useEffect(() => {
     if (!room) {
-      console.debug("no room");
       return;
     }
     const chunkKeys = new Set<string>();
@@ -57,30 +48,17 @@ export function ChunkLoader() {
       }
     }
 
-    console.debug("pre loop", {
-      playerChunkX,
-      playerChunkY,
-      playerChunkZ,
-      viewDistance,
-      chunkKeys,
-      loadingChunks,
-      chunks,
-      room,
-    });
-
     for (let x = -viewDistance; x <= viewDistance; x++) {
       for (let y = -viewDistance; y <= viewDistance; y++) {
         for (let z = -viewDistance; z <= viewDistance; z++) {
           const chunkKey = `${playerChunkX + x},${playerChunkY + y},${
             playerChunkZ + z
           }`;
-          console.debug("loop", { x, y, z, chunkKey });
           if (
             !chunkKeys.has(chunkKey) &&
             !loadingChunks.current.has(chunkKey)
           ) {
             loadingChunks.current.set(chunkKey, Date.now());
-            console.debug("requesting chunk", { x, y, z });
             room?.send(ClientPackageType.RequestLoadChunk, {
               x: playerChunkX + x,
               y: playerChunkY + y,
@@ -102,7 +80,6 @@ export function ChunkLoader() {
         chunkZ - playerChunkZ
       );
       if (distance > viewDistance * 3) {
-        console.debug("despawning chunk", { chunkX, chunkY, chunkZ });
         setChunk(chunk.x, chunk.y, chunk.z, null);
         loadingChunks.current.delete(`${chunkX},${chunkY},${chunkZ}`);
       }
