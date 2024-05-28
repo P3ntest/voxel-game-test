@@ -13,6 +13,8 @@ export function World() {
   // only allow one new chunk to be loaded at a time
   const [visibleChunksIds, setVisibleChunksIds] = useState<string[]>([]);
 
+  const allChunkIds = chunks.map((chunk) => `${chunk.x},${chunk.y},${chunk.z}`);
+
   useFrame(() => {
     if (visibleChunksIds.length == chunks.length || chunks.length == 0) {
       return;
@@ -24,9 +26,7 @@ export function World() {
     if (!newChunk) {
       return;
     }
-    const allChunkIds = chunks.map(
-      (chunk) => `${chunk.x},${chunk.y},${chunk.z}`
-    );
+
     console.log("loading chunk", `${newChunk.x},${newChunk.y},${newChunk.z}`);
     setVisibleChunksIds((prev) => [
       ...prev.filter((id) => allChunkIds.includes(id)),
@@ -53,9 +53,10 @@ export function World() {
       <CheckPlayerSpawn
         visibleChunksIds={visibleChunksIds}
         forceDisplay={(id) => {
-          if (!visibleChunksIds.includes(id)) {
-            setVisibleChunksIds((prev) => [...prev, id]);
-          }
+          if (allChunkIds.includes(id))
+            if (!visibleChunksIds.includes(id)) {
+              setVisibleChunksIds((prev) => [...prev, id]);
+            }
         }}
       />
     </>
@@ -77,6 +78,12 @@ function CheckPlayerSpawn({
   );
   const room = useColyseusRoom();
   const requestedSpawn = useRef(false);
+  console.log(
+    "checking for",
+    `${coords.chunkX},${coords.chunkY},${coords.chunkZ}`,
+    "in",
+    visibleChunksIds
+  );
   if (
     visibleChunksIds.includes(
       `${coords.chunkX},${coords.chunkY},${coords.chunkZ}`

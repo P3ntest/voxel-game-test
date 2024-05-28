@@ -3,7 +3,6 @@ import { useLerped } from "../networking/useLerped";
 
 export function OtherPlayers() {
   const players = useColyseusState((state) => state.players);
-  console.log("other players", players);
   const meId = useColyseusRoom()?.sessionId;
 
   const otherPlayers = Array.from(players?.values() ?? []).filter(
