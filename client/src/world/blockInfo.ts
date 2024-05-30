@@ -47,6 +47,22 @@ export const blockInfos: BlockInfo[] = [
     id: 10,
     texture: "diorite",
   },
+  {
+    id: 11,
+    texture: "ice",
+  },
+  {
+    id: 12,
+    texture: "blue_ice",
+  },
+  {
+    id: 13,
+    texture: "packed_ice",
+  },
+  {
+    id: 14,
+    texture: "snow",
+  },
 ].map((blockInfo) => ({
   ...blockInfo,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

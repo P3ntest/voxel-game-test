@@ -46,17 +46,6 @@ export function compressChunk(chunk: Uint8Array) {
     }
   }
 
-  const compressedArray = new Uint8Array(compressed);
-
-  console.log(
-    "compressed",
-    chunk.length,
-    "bytes",
-    "to",
-    compressedArray.length,
-    "bytes"
-  );
-
   return new Uint8Array(compressed);
 }
 

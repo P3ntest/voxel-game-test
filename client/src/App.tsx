@@ -13,6 +13,7 @@ import { OtherPlayers } from "./player/OtherPlayers";
 import { Broadcaster } from "./networking/Broadcaster";
 import { ChunkLoader } from "./player/ChunkLoader";
 import { PlayerInventory } from "./ui/PlayerInventory";
+import { Sun } from "./world/Sun";
 
 export default function App() {
   useEffect(() => {
@@ -62,9 +63,7 @@ export default function App() {
         <KeyboardControls map={keyboardControlsMap}>
           <Suspense>
             <Physics timeStep={1 / 20}>
-              <ambientLight intensity={Math.PI / 2} />
-              <directionalLight position={[10, 20, 0]} intensity={1} />
-
+              <Sun />
               <World />
               <Player />
               <ChunkLoader />

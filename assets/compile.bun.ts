@@ -4,9 +4,11 @@ import jimp from "jimp";
 const allAvailableTextures = Array.from(
   new Set(
     Object.values(blockTextures).flatMap((block) =>
-      Object.values(block).flatMap((texture) =>
-        Array.isArray(texture) ? texture : [texture]
-      )
+      typeof block === "string"
+        ? [block]
+        : Object.values(block).flatMap((texture) =>
+            Array.isArray(texture) ? texture : [texture]
+          )
     )
   )
 );
@@ -53,6 +55,18 @@ const blockAtlas: Record<string, BlockUvAtlas> = {};
 
 for (const block of Object.keys(blockTextures)) {
   const textures = blockTextures[block];
+  if (typeof textures == "string") {
+    blockAtlas[block] = [
+      atlas[textures],
+      atlas[textures],
+      atlas[textures],
+      atlas[textures],
+      atlas[textures],
+      atlas[textures],
+    ];
+    continue;
+  }
+
   const sides = Array.isArray(textures.sides)
     ? textures.sides
     : new Array(4).fill(textures.sides);

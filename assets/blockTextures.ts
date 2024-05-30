@@ -49,4 +49,8 @@ export const blockTextures = {
     bottom: "andesite/side",
     sides: "andesite/side",
   },
+  ice: "ice/ice",
+  blue_ice: "ice/blue_ice",
+  packed_ice: "ice/packed_ice",
+  snow: "ice/snow",
 };

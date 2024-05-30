@@ -115,7 +115,8 @@ export function generateChunkData(x: number, y: number, z: number) {
       const { height, temperature, stoneHeight, vegetationChance } =
         terrainNoise(x * CELL_SIZE + vX, z * CELL_SIZE + vZ);
 
-      const biome = temperature > 0.3 ? "desert" : "forest";
+      const biome =
+        temperature > 0.3 ? "desert" : temperature < -0.3 ? "arctic" : "forest";
 
       const yHeight = Math.floor(height * TERRAIN_HEIGHT + SEA_LEVEL);
 
@@ -130,6 +131,17 @@ export function generateChunkData(x: number, y: number, z: number) {
             allStructureBlocks.push(
               ...mapStructure(cactusStructure(globalX, globalZ), vX, vY, vZ)
             );
+          }
+        } else if (biome == "arctic") {
+          if (yHeight > SEA_LEVEL + stoneHeight) {
+            voxel = 12;
+          } else if (delta < 4) {
+            if (temperature < -0.5) voxel = 13;
+            else voxel = 14;
+          } else if (delta < 3) {
+            voxel = 11;
+          } else {
+            voxel = stoneLikeBlock(globalX, globalY, globalZ);
           }
         } else if (biome === "forest") {
           if (yHeight > SEA_LEVEL + stoneHeight) {
