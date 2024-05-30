@@ -8,7 +8,7 @@ import {
   useBeforePhysicsStep,
   useRapier,
 } from "@react-three/rapier";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Raycaster,
   Vector3,
@@ -17,7 +17,7 @@ import {
 } from "three";
 import { Controls, useWalkVector } from "./Controls";
 import { Vector } from "../util/Vector";
-import { useThree } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { useWorld } from "../world/worldStore";
 import { calculateClickPosition } from "./clickLogic";
 import { terrainBodies } from "../util/worldUtils";
@@ -134,41 +134,60 @@ export function Player() {
   const three = useThree();
   const setBlock = useWorld((state) => state.setBlock);
 
+  const [targetedBlock, setTargetedBlock] = useState<
+    [number, number, number] | null
+  >(null);
+  const targetedFaceBlock = useRef<[number, number, number] | null>(null);
+  useFrame(() => {
+    const raycaster = new Raycaster();
+    const origin = camRef.current.getWorldPosition(new Vector3());
+    const direction = camRef.current.getWorldDirection(new Vector3());
+    raycaster.set(origin, direction);
+    const intersects = raycaster.intersectObjects(three.scene.children, true);
+    for (const i of intersects) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (!terrainBodies.has(i.object as any)) {
+        continue;
+      }
+      const voxel = calculateClickPosition(i.point, i.face!.normal);
+      targetedFaceBlock.current = [
+        voxel.faceVoxel.x,
+        voxel.faceVoxel.y,
+        voxel.faceVoxel.z,
+      ];
+      if (
+        targetedBlock &&
+        targetedBlock.every((v, i) => v === voxel.voxel[i])
+      ) {
+        break;
+      }
+      setTargetedBlock([voxel.voxel.x, voxel.voxel.y, voxel.voxel.z]);
+      break;
+    }
+  });
+
   // clicking test
   useEffect(() => {
     const listener = (e: MouseEvent) => {
-      const raycaster = new Raycaster();
-      const origin = camRef.current.getWorldPosition(new Vector3());
-      const direction = camRef.current.getWorldDirection(new Vector3());
-      raycaster.set(origin, direction);
-      const intersects = raycaster.intersectObjects(three.scene.children, true);
-      for (const i of intersects) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if (!terrainBodies.has(i.object as any)) {
-          console.log("hit non-terrain object");
-          continue;
-        }
-        const voxel = calculateClickPosition(i.point, i.face!.normal);
-        if (!e.shiftKey) {
-          room?.send(ClientPackageType.BreakBlock, {
-            x: voxel.voxel.x,
-            y: voxel.voxel.y,
-            z: voxel.voxel.z,
-            type: 0,
-          });
-        } else {
-          room?.send(ClientPackageType.PlaceBlock, {
-            x: voxel.faceVoxel.x,
-            y: voxel.faceVoxel.y,
-            z: voxel.faceVoxel.z,
-          });
-        }
-        break;
+      if (!e.shiftKey) {
+        if (!targetedFaceBlock.current) return;
+        room?.send(ClientPackageType.BreakBlock, {
+          x: targetedBlock[0],
+          y: targetedBlock[1],
+          z: targetedBlock[2],
+        });
+      } else {
+        if (!targetedBlock) return;
+        room?.send(ClientPackageType.PlaceBlock, {
+          x: targetedFaceBlock.current[0],
+          y: targetedFaceBlock.current[1],
+          z: targetedFaceBlock.current[2],
+        });
       }
     };
     window.addEventListener("mousedown", listener);
     return () => window.removeEventListener("mousedown", listener);
-  }, [setBlock, three.scene.children]);
+  }, [room, targetedBlock]);
 
   return (
     <>
@@ -184,10 +203,22 @@ export function Player() {
         </group>
         <CuboidCollider args={[0.3, 0.9, 0.3]} ref={colRef} />
       </RigidBody>
+      {targetedBlock && (
+        <HighlightBlock position={targetedBlock as [number, number, number]} />
+      )}
     </>
   );
 }
 
+function HighlightBlock({ position }: { position: [number, number, number] }) {
+  return (
+    <group position={position.map((v) => v + 0.5) as [number, number, number]}>
+      <line>
+        <lineBasicMaterial />
+      </line>
+    </group>
+  );
+}
 function PointerLock() {
   useEffect(() => {
     const canvas = document.querySelector("body");

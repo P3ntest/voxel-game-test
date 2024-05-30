@@ -27,7 +27,6 @@ export function World() {
       return;
     }
 
-    console.log("loading chunk", `${newChunk.x},${newChunk.y},${newChunk.z}`);
     setVisibleChunksIds((prev) => [
       ...prev.filter((id) => allChunkIds.includes(id)),
       `${newChunk.x},${newChunk.y},${newChunk.z}`,
@@ -78,12 +77,6 @@ function CheckPlayerSpawn({
   );
   const room = useColyseusRoom();
   const requestedSpawn = useRef(false);
-  console.log(
-    "checking for",
-    `${coords.chunkX},${coords.chunkY},${coords.chunkZ}`,
-    "in",
-    visibleChunksIds
-  );
   if (
     visibleChunksIds.includes(
       `${coords.chunkX},${coords.chunkY},${coords.chunkZ}`

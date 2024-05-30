@@ -7,7 +7,7 @@ export const SEA_LEVEL = 0; // the 5th layer in the middl
 export const TERRAIN_HEIGHT = 100;
 const MOUNTAIN_HEIGHT = 0;
 
-const prng = alea("b");
+const prng = alea(Math.random());
 const noise2d = createNoise2D(prng);
 const noise3d = createNoise3D(prng);
 function octaveNoise2d(
